@@ -1,0 +1,13 @@
+{
+  "zookeep-project-guid": "c0862dd1-d048-4a49-a664-b3ce4d75805d",
+  "name": "arcs",
+  "repo-type": "python-2026-03",
+  "license": "CC0-1.0",
+  "repository": {
+    "name": "arcs",
+    "visibility": "public"
+  },
+  "python-package": {
+    "name": "arcs"
+  }
+}

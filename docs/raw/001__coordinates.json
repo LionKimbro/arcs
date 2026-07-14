@@ -1,0 +1,39 @@
+{
+  "items": [
+    {
+      "type": "spark",
+      "coordinates": {
+        "uuid": "5612216a-bd33-4f3b-bd53-f535ed401b63",
+        "title": "Arc Engine"
+      }
+    },
+    {
+      "type": "conversation",
+      "coordinates": {
+        "hook": "initial conversation",
+        "url": "https://chatgpt.com/c/6a2c861d-ceec-83e8-b8e4-382c6ed3d006"
+      }
+    },
+    {
+      "type": "conversation",
+      "coordinates": {
+        "hook": "earlier conversation, not fully formed -- see 'lifemap'",
+        "url": "https://chatgpt.com/c/6a2a49d3-c3e4-83e8-aa43-32c21af9466b"
+      }
+    },
+    {
+      "type": "conversation",
+      "coordinates": {
+        "hook": "KAiros vs. Chronos",
+        "url": "https://chatgpt.com/c/6a33c25e-5574-83e8-acc7-740da9464c57"
+      }
+    },
+    {
+      "type": "conversation",
+      "coordinates": {
+        "hook": "KAiros vs. Chronos",
+        "url": "https://chatgpt.com/c/6a33c25e-5574-83e8-acc7-740da9464c57"
+      }
+    }
+  ]
+}
