@@ -1,0 +1,16 @@
+[build-system]
+requires = ["setuptools>=61"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "arcs"
+version = "0.1.0"
+description = "Meaningful passages of life"
+requires-python = ">=3.11"
+dependencies = ["machine-root>=0.1.0"]
+
+[project.scripts]
+arcs = "arcs.main:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
