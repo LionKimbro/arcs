@@ -12,6 +12,29 @@ widgets = {}
 windows = {}
 
 
+def handle_when_user_double_clicks_uuid(uuid):
+    g["root"].clipboard_clear()
+    g["root"].clipboard_append(uuid)
+    return "break"
+
+
+def build_uuid_label(parent, uuid):
+    label = ttk.Label(parent, text=uuid, foreground="#666666", cursor="hand2")
+    label.bind("<Double-Button-1>", lambda _: handle_when_user_double_clicks_uuid(uuid))
+    return label
+
+
+def tag_uuids(widget, start="1.0"):
+    while index := widget.search(r"\m[0-9a-fA-F]{8}(-[0-9a-fA-F]{4}){3}-[0-9a-fA-F]{12}\M",
+                                 start, "end", regexp=True):
+        start = widget.index(index + "+36c")
+        uuid = widget.get(index, start)
+        tag = "uuid:" + uuid
+        widget.tag_add(tag, index, start)
+        widget.tag_bind(tag, "<Double-Button-1>",
+                        lambda _, uuid=uuid: handle_when_user_double_clicks_uuid(uuid))
+
+
 def send(event):
     if not g["closing"]:
         g["outgoing"].put(event)
@@ -152,7 +175,7 @@ def build_arc_detail_window(command):
         entry = ttk.Entry(header, textvariable=variables[key], font=("Segoe UI", 12))
         entry.grid(row=row, column=1, sticky="ew", pady=3)
     ttk.Label(frame, text="Boundaries: YYYY / YYYY-MM / YYYY-MM-DD / UNKNOWN; end also accepts ONGOING.").pack(anchor="w", pady=6)
-    ttk.Label(frame, text=command["record"]["uuid"], foreground="#666666").pack(anchor="w")
+    build_uuid_label(frame, command["record"]["uuid"]).pack(anchor="w")
     boundary_actions = ttk.Frame(frame)
     boundary_actions.pack(fill="x")
     ttk.Label(frame, text="Description").pack(anchor="w", pady=(10, 4))
@@ -261,7 +284,9 @@ def realize_core_command(command):
     if kind == "OUTPUT":
         output = widgets["output"]
         output.configure(state="normal")
+        start = output.index("end-1c")
         output.insert("end", command["text"] + "\n")
+        tag_uuids(output, start)
         output.see("end")
         output.configure(state="disabled")
     elif kind == "OPEN" and not g["closing"]:

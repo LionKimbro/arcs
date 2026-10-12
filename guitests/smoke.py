@@ -36,7 +36,7 @@ def handle_when_gui_test_advances():
 def advance_scenario():
     output = tk.widgets["output"].get("1.0", "end")
     phase = g["phase"]
-    if phase == 0 and "Ready." in output:
+    if phase == 0 and "Ready." in output and tk.widgets["entry"].winfo_ismapped():
         assert not tk.windows, "Startup must open only Command Center"
         entry = tk.widgets["entry"]
         assert entry.winfo_ismapped()

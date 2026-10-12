@@ -36,6 +36,9 @@ evaluation. Startup opens Command Center alone. New arcs have title “Untitled
 arc,” a generated editable name, and unknown boundaries. Creation does not imply
 an ongoing ending or a beginning today.
 
+Double-click a UUID label to copy it to the clipboard. UUIDs in Command Center
+output and saved journal/event prose can also be copied by double-clicking them.
+
 Edit title, lowercase/digit/hyphen name, description, and boundaries, then click
 **Save**. Boundaries accept `YYYY`, `YYYY-MM`, `YYYY-MM-DD`, or `UNKNOWN`; the end
 also accepts `ONGOING`. Changed boundaries add a ChronoMark claim and select it

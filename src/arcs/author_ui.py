@@ -141,9 +141,10 @@ def install_record_details(command):
     ttk.Label(frame, text=kind + " · " + record["time-label"], wraplength=480).pack(anchor="w", pady=4)
     body = tkinter.Text(frame, height=8, wrap="word", font=("Segoe UI", 11))
     body.insert("1.0", record["description"])
+    tk.tag_uuids(body)
     body.configure(state="disabled")
     body.pack(fill="both", expand=True, pady=8)
-    ttk.Label(frame, text=record["uuid"], foreground="#666666").pack(anchor="w")
+    tk.build_uuid_label(frame, record["uuid"]).pack(anchor="w")
     temporal = record["temporal"]["records"][0]
     for claim in temporal.get("temporal-claims", []):
         if claim.get("claim-notes"):
@@ -198,8 +199,10 @@ def build_author_editor(command):
     label = {"journal-entry": "New journal entry", "event": "New event", "transition": "Transition to another arc"}[draft["kind"]]
     ttk.Label(frame, text=label, font=("Segoe UI", 13, "bold")).grid(row=reg["row"], column=0, sticky="w")
     reg["row"] += 1
-    ttk.Label(frame, text="For: " + command["arc-title"] + "\n" + draft["arc"], wraplength=480).grid(
+    ttk.Label(frame, text="For: " + command["arc-title"], wraplength=480).grid(
         row=reg["row"], column=0, sticky="w", pady=4)
+    reg["row"] += 1
+    tk.build_uuid_label(frame, draft["arc"]).grid(row=reg["row"], column=0, sticky="w")
     reg["row"] += 1
     if draft["kind"] == "transition":
         ttk.Label(frame, text="This event ends the current arc and begins the new arc.",

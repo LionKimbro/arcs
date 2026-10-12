@@ -9,6 +9,7 @@ from tempfile import TemporaryDirectory
 
 def run_checks():
     root = Path(__file__).resolve().parent
+    subprocess.run([sys.executable, str(root / "copying.py")], timeout=25, check=True)
     with TemporaryDirectory(prefix="arcs-tk-") as directory:
         database = Path(directory) / "arcs.sqlite3"
         for mode in ("create", "reopen"):
