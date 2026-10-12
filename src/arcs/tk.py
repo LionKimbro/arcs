@@ -5,7 +5,7 @@ import tkinter as tkinter
 from tkinter import messagebox, ttk
 import traceback
 
-from . import author_ui, machine
+from . import appearance, author_ui, machine
 
 g = {"root": None, "incoming": None, "outgoing": None, "closing": False}
 widgets = {}
@@ -19,7 +19,7 @@ def handle_when_user_double_clicks_uuid(uuid):
 
 
 def build_uuid_label(parent, uuid):
-    label = ttk.Label(parent, text=uuid, foreground="#666666", cursor="hand2")
+    label = ttk.Label(parent, text=uuid, style="UUID.TLabel", cursor="hand2")
     label.bind("<Double-Button-1>", lambda _: handle_when_user_double_clicks_uuid(uuid))
     return label
 
@@ -54,25 +54,27 @@ def build_command_center_before_workers_start():
     root = tkinter.Tk()
     root.report_callback_exception = lambda *exception: handle_when_tk_callback_fails(exception)
     g["root"] = root
+    appearance.install_amber_theme_for_tk_windows(root)
     root.title("Arcs — Command Center")
     root.geometry("820x480")
     root.minsize(500, 300)
     root.protocol("WM_DELETE_WINDOW", handle_when_user_closes_command_center)
     root.bind("<<CoreMailAvailable>>", handle_when_core_mail_arrives)
-    frame = ttk.Frame(root, padding=12)
+    frame = ttk.Frame(root, padding=12, style="App.TFrame")
     frame.pack(fill="both", expand=True)
     frame.columnconfigure(0, weight=1)
     frame.rowconfigure(1, weight=1)
-    ttk.Label(frame, text="ARCS / Command Center", font=("Segoe UI", 15, "bold")).grid(
-        row=0, column=0, sticky="w", pady=(0, 8))
-    output_frame = ttk.Frame(frame)
+    top = ttk.Frame(frame, padding=(12, 10), style="Top.TFrame")
+    top.grid(row=0, column=0, sticky="ew", pady=(0, 8))
+    ttk.Label(top, text="ARCS / Command Center", style="Top.Title.TLabel").pack(anchor="w")
+    output_frame = tkinter.Frame(frame, background=appearance.COLORS["border"], padx=1, pady=1)
     output_frame.grid(row=1, column=0, sticky="nsew")
     output = tkinter.Text(output_frame, wrap="word", state="disabled", font=("Consolas", 11))
     scrollbar = ttk.Scrollbar(output_frame, command=output.yview)
     output.configure(yscrollcommand=scrollbar.set)
     scrollbar.pack(side="right", fill="y")
     output.pack(fill="both", expand=True)
-    ttk.Label(frame, text="Command — press Enter to submit").grid(
+    ttk.Label(frame, text="Command — press Enter to submit", style="App.Muted.TLabel").grid(
         row=2, column=0, sticky="w", pady=(10, 4))
     entry = tkinter.Entry(frame, font=("Consolas", 12))
     entry.grid(row=3, column=0, sticky="ew")
@@ -164,31 +166,38 @@ def build_arc_detail_window(command):
     window.geometry("1060x820")
     window.minsize(780, 620)
     window.protocol("WM_DELETE_WINDOW", lambda: handle_when_user_closes_detail_window(view_id))
-    frame = ttk.Frame(window, padding=16)
-    frame.pack(fill="both", expand=True)
+    border = tkinter.Frame(window, background=appearance.COLORS["border"])
+    border.pack(fill="both", expand=True, padx=12, pady=12)
+    frame = ttk.Frame(border, padding=16)
+    frame.pack(fill="both", expand=True, padx=1, pady=1)
+    ttk.Label(frame, text="Arc Detail", style="Heading.TLabel").pack(anchor="w", pady=(0, 8))
     variables = {key: tkinter.StringVar(window) for key in ("title", "name", "begin", "end")}
     header = ttk.Frame(frame)
     header.pack(fill="x")
     header.columnconfigure(1, weight=1)
-    for row, key in enumerate(("title", "name", "begin", "end")):
-        ttk.Label(header, text=key.capitalize()).grid(row=row, column=0, sticky="w", padx=(0, 12), pady=3)
-        entry = ttk.Entry(header, textvariable=variables[key], font=("Segoe UI", 12))
-        entry.grid(row=row, column=1, sticky="ew", pady=3)
-    ttk.Label(frame, text="Boundaries: YYYY / YYYY-MM / YYYY-MM-DD / UNKNOWN; end also accepts ONGOING.").pack(anchor="w", pady=6)
+    header.columnconfigure(3, weight=1)
+    for position, key in enumerate(("title", "name", "begin", "end")):
+        row, column = position // 2, (position % 2) * 2
+        ttk.Label(header, text=key.capitalize(), style="Muted.TLabel").grid(
+            row=row, column=column, sticky="w", padx=(0 if column == 0 else 16, 12), pady=3)
+        entry = ttk.Entry(header, textvariable=variables[key], font=("TkDefaultFont", 11))
+        entry.grid(row=row, column=column + 1, sticky="ew", pady=3)
+    ttk.Label(frame, text="Boundaries: YYYY / YYYY-MM / YYYY-MM-DD / UNKNOWN; end also accepts ONGOING.",
+              style="Muted.TLabel").pack(anchor="w", pady=6)
     build_uuid_label(frame, command["record"]["uuid"]).pack(anchor="w")
     boundary_actions = ttk.Frame(frame)
     boundary_actions.pack(fill="x")
     ttk.Label(frame, text="Description").pack(anchor="w", pady=(10, 4))
-    description = tkinter.Text(frame, height=5, wrap="word", font=("Segoe UI", 11), undo=True)
+    description = tkinter.Text(frame, height=4, wrap="word", font=("Segoe UI", 11), undo=True)
     description.pack(fill="x")
     actions = ttk.Frame(frame)
     actions.pack(fill="x", pady=10)
-    save = ttk.Button(actions, text="Save", command=lambda: handle_when_user_saves_arc_draft(view_id))
+    save = ttk.Button(actions, text="Save", style="Primary.TButton", command=lambda: handle_when_user_saves_arc_draft(view_id))
     save.pack(side="left")
     reload_button = ttk.Button(actions, text="Reload saved", command=lambda: handle_when_user_reloads_saved_arc(view_id))
     reload_button.pack(side="left", padx=8)
     status = tkinter.StringVar(window)
-    ttk.Label(actions, textvariable=status).pack(side="left", padx=8)
+    ttk.Label(actions, textvariable=status, style="Muted.TLabel").pack(side="left", padx=8)
     author_actions = ttk.Frame(frame)
     author_actions.pack(fill="x", pady=(0, 8))
     author_buttons = []
@@ -200,12 +209,16 @@ def build_arc_detail_window(command):
         author_buttons.append(button)
     panes = ttk.Panedwindow(frame, orient="horizontal")
     panes.pack(fill="both", expand=True)
-    chronology = ttk.Frame(panes, padding=12)
-    detail = ttk.Frame(panes, padding=12)
-    panes.add(chronology, weight=1)
-    panes.add(detail, weight=2)
-    ttk.Label(chronology, text="Chronology", font=("Segoe UI", 12, "bold")).pack(anchor="w")
-    empty_label = ttk.Label(chronology, text="No events or journal entries yet.", wraplength=260)
+    chronology_border = tkinter.Frame(panes, background=appearance.COLORS["border"])
+    detail_border = tkinter.Frame(panes, background=appearance.COLORS["border"])
+    chronology = ttk.Frame(chronology_border, padding=12)
+    detail = ttk.Frame(detail_border, padding=12)
+    chronology.pack(fill="both", expand=True, padx=1, pady=1)
+    detail.pack(fill="both", expand=True, padx=1, pady=1)
+    panes.add(chronology_border, weight=1)
+    panes.add(detail_border, weight=2)
+    ttk.Label(chronology, text="Chronology", style="Heading.TLabel").pack(anchor="w")
+    empty_label = ttk.Label(chronology, text="No events or journal entries yet.", wraplength=260, style="Muted.TLabel")
     empty_label.pack(anchor="w", pady=4)
     tree_frame = ttk.Frame(chronology)
     tree_frame.pack(fill="both", expand=True)

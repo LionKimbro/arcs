@@ -3,6 +3,7 @@
 Tk presents one Command Center and on-demand detail windows. Core owns commands,
 view drafts, and outstanding operations. Mem owns accepted records. Disk owns SQLite.
 Use Today's thread-local Mobile Stacks and fatal-worker boundary.
+Tk uses Today-style layered amber panels and flat controls.
 
 Commands: create-arc; edit-arc name-or-UUID; list-arcs; help; exit (normal close).
 Creation starts untitled,

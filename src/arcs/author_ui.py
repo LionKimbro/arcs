@@ -134,11 +134,11 @@ def install_record_details(command):
     frame = tk.windows[view_id]["detail"]
     record = command["record"]
     if record is None:
-        ttk.Label(frame, text="Select a chronology record to read it here.").pack(anchor="w", pady=10)
+        ttk.Label(frame, text="Select a chronology record to read it here.", style="Muted.TLabel").pack(anchor="w", pady=10)
         return
     kind = "Journal entry" if record["type"] == "journal-entry" else "Transition event" if record["successor"] else "Event"
-    ttk.Label(frame, text=record["title"] or kind, font=("Segoe UI", 14, "bold"), wraplength=480).pack(anchor="w", pady=(0, 8))
-    ttk.Label(frame, text=kind + " · " + record["time-label"], wraplength=480).pack(anchor="w", pady=4)
+    ttk.Label(frame, text=record["title"] or kind, style="Heading.TLabel", wraplength=480).pack(anchor="w", pady=(0, 8))
+    ttk.Label(frame, text=kind + " · " + record["time-label"], style="Muted.TLabel", wraplength=480).pack(anchor="w", pady=4)
     body = tkinter.Text(frame, height=8, wrap="word", font=("Segoe UI", 11))
     body.insert("1.0", record["description"])
     tk.tag_uuids(body)
@@ -197,9 +197,9 @@ def build_author_editor(command):
     frame.columnconfigure(0, weight=1)
     reg.update(view=view_id, frame=frame, row=0)
     label = {"journal-entry": "New journal entry", "event": "New event", "transition": "Transition to another arc"}[draft["kind"]]
-    ttk.Label(frame, text=label, font=("Segoe UI", 13, "bold")).grid(row=reg["row"], column=0, sticky="w")
+    ttk.Label(frame, text=label, style="Heading.TLabel").grid(row=reg["row"], column=0, sticky="w")
     reg["row"] += 1
-    ttk.Label(frame, text="For: " + command["arc-title"], wraplength=480).grid(
+    ttk.Label(frame, text="For: " + command["arc-title"], style="Muted.TLabel", wraplength=480).grid(
         row=reg["row"], column=0, sticky="w", pady=4)
     reg["row"] += 1
     tk.build_uuid_label(frame, draft["arc"]).grid(row=reg["row"], column=0, sticky="w")
@@ -228,7 +228,7 @@ def build_author_editor(command):
             build_author_field(spec)
     actions = ttk.Frame(window["detail-actions"])
     actions.pack(fill="x")
-    save = ttk.Button(actions, text="Save", command=lambda: save_author_draft(view_id))
+    save = ttk.Button(actions, text="Save", style="Primary.TButton", command=lambda: save_author_draft(view_id))
     save.pack(side="left")
     cancel = ttk.Button(actions, text="Cancel", command=lambda: request_navigation(view_id, {"kind": "cancel"}))
     cancel.pack(side="left", padx=8)
@@ -238,7 +238,7 @@ def build_author_editor(command):
         refresh.pack(side="left")
         window["author-controls"].append(refresh)
     window["author-status"] = tkinter.StringVar(frame, value="Draft — not saved")
-    ttk.Label(window["detail-actions"], textvariable=window["author-status"], wraplength=480).pack(anchor="w", pady=4)
+    ttk.Label(window["detail-actions"], textvariable=window["author-status"], style="Muted.TLabel", wraplength=480).pack(anchor="w", pady=4)
     window["author-installing"] = False
     window["detail-canvas"].yview_moveto(0)
     reg.update(view=None, frame=None, row=0)

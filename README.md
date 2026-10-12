@@ -3,6 +3,8 @@
 Arcs records meaningful passages of life, their boundaries, and your story about
 them. It provides a tkinter Command Center, concurrent Arc Detail windows,
 journal/event authoring, event-driven transitions, and SQLite persistence.
+The interface follows Today's dark layered panels and flat controls, with an
+amber palette, warm cream text, and gold focus and action accents.
 
 ## Run
 

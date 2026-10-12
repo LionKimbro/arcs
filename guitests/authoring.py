@@ -93,7 +93,8 @@ def advance_scenario():
         g["journal"] = first["author"]["uuid"]
         click_editor(g["first"], "Save")
         g["phase"] = 4
-    elif phase == 4 and first["author"] is None and len(get_items(g["first"])) == 1:
+    elif (phase == 4 and first["author"] is None and len(get_items(g["first"])) == 1
+          and tk.windows[g["second"]]["tree"].exists(g["journal"])):
         assert first["selected"] == g["journal"]
         text = next(child for child in first["detail"].winfo_children() if child.winfo_class() == "Text")
         assert "Journal prose" in text.get("1.0", "end")
@@ -108,7 +109,8 @@ def advance_scenario():
         fill(g["first"], {"description": "A backdated event", "when": "2000", "earliest": "1999", "latest": "2001"})
         click_editor(g["first"], "Save")
         g["phase"] = 7
-    elif phase == 7 and first["author"] is None and len(get_items(g["first"])) == 2:
+    elif (phase == 7 and first["author"] is None and len(get_items(g["first"])) == 2
+          and len(get_items(g["second"])) == 2):
         assert get_items(g["first"])[0] == g["journal"]
         assert author_ui.get_author_fields(g["second"])["description"] == "The other view's unsaved event."
         assert len(get_items(g["second"])) == 2
