@@ -20,13 +20,8 @@ MachineRoot configuration fails clearly. To choose an exact database instead:
 arcs --database F:/my-data/arcs.sqlite3
 ```
 
-From an uninstalled checkout:
-
-```powershell
-./run-arcs.bat
-# Or choose an exact database:
-./run-arcs.bat --database F:/my-data/arcs.sqlite3
-```
+The editable install creates the `arcs` command and picks up source changes
+without reinstalling. Run it from any directory. `python -m arcs` is also supported.
 
 ## Commands and editing
 
