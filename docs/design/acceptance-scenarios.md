@@ -35,3 +35,23 @@ Modified: 2026-10-11
 Run worker-only checks and actual Tk integration checks; they prove different things. Confirm normal close with several detail windows and no remaining workers. Inject Core, Mem, and Disk failures independently in fresh processes and check fatal closure and nonzero exit. Confirm idempotent repeated close and failure notifications. Final SQLite write failure must not become a successful saved exit.
 
 These are design-level verification targets, not a request for a large redundant test framework. Use isolated temporary databases and meaningful checks for the delivered behavior. Exact test commands and launch conventions belong to the implementation conversation after its environment and packaging are settled.
+
+## Authoring extension acceptance
+Created: 2026-10-11
+Modified: 2026-10-11
+
+Every Arc Detail window, including an empty arc, shows the three required buttons from [Arc authoring](arc-authoring.md). Create a journal entry and an event through their respective buttons, save them, and read each through chronology selection. They are associated with the correct window's arc and do not change its boundaries. Canceling a draft creates no record. A saved backdated record appears at its chronology position rather than always at the top. Unknown event time stays unknown.
+
+Open two views of the same arc. Save a new entry or event in one; both chronologies refresh while the other window preserves its selection and any unsaved draft. Start authoring in a third view of a different arc and verify no cross-association. Navigation or closure with a dirty draft must not silently discard content.
+
+Use Transition to another arc: record a transition event and new successor, save, and verify the predecessor ends, the successor begins and is ongoing, the event is associated with both, and the predecessor/successor relationship exists. The predecessor retains its UUID and history; the successor has a distinct UUID. Stay in the predecessor view after save, then use Open successor arc to summon the new detail window. Restart and verify that all of these records and relationships persist.
+
+Verify that the relationship is a separate link object with its own stable UUID, conforming to M1's Link Aspect: `from` identifies the predecessor and `to` identifies the successor. The event UUID, link UUID, and arc UUIDs identify distinct objects. Restart preserves the link identity and direction; transaction failure must not leave an orphan link or a partially established transition.
+
+Verify type `transition` on the arc-to-arc link and a second, separately identified type `via` link from the transition link UUID to the event UUID. Internal names map to the exact tag URIs in [M1 link types](../design-references/m1-link-types.md). Both link identities survive restart and participate in transaction rollback on failure.
+
+Verify member-of links from saved journal entries and events to their associated arcs. A transition creates two such links from its event to the predecessor and successor, alongside transition and via. All four links have independent UUIDs and roll back together on failure. Verify parent-child direction from larger arc to sub-arc, allowing multiple parents. The links table stores one simplified type string and no typehint column.
+
+Verify Basic stores one object-kind `type` (`arc`, `event`, or `journal-entry`), with no parallel typehint field. Link `type` separately describes the relationship. Create transition and via links without Basic rows for the links, and verify endpoint resolution still accepts the via source link and rejects nonexistent endpoints. Optional Basic metadata for a link uses its existing UUID and type `link`, not a new object identity.
+
+Inject a transaction failure in an isolated transition save: no partial transition may persist, the UI must not report success, and the draft must remain available under the established failure policy. Exercise duplicate Save clicks and a stale predecessor revision so they cannot create duplicate successors or silently replace an existing ending. Verify orderly close waits for submitted authoring saves using the existing lifecycle protocol.

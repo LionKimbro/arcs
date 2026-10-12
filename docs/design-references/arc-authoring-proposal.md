@@ -6,7 +6,7 @@ Modified: 2026-10-11
 Created: 2026-10-11
 Modified: 2026-10-11
 
-This is a proposal for discussion, not an accepted interface specification. It extends [Wing-Cat's Arc Detail View](arc-detail-view-from-wingcat.md). Keep three visible actions near the chronology: **New journal entry**, **New event**, and **Transition to another arc**. Use the existing right-hand detail pane as a draft editor, retaining the current arc header and chronology for context. This lets us develop authoring without first deciding between standalone windows and a browser.
+This document preserves the original proposal. Lion has now requested the three authoring buttons as specific design; [docs/design/arc-authoring.md](../design/arc-authoring.md) is the authoritative adopted design and supersedes this proposal where they differ. The proposal extends [Wing-Cat's Arc Detail View](arc-detail-view-from-wingcat.md): three visible actions near the chronology, **New journal entry**, **New event**, and **Transition to another arc**, with the right-hand pane used as a draft editor while retaining arc context.
 
 ## New journal entry
 Created: 2026-10-11

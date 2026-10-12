@@ -30,6 +30,14 @@ An empty arc has an honest empty chronology and a right-hand no-selection state.
 
 Sub-arc boundaries and interval visualization remain unresolved and are not required by the initial create-three-arcs scenario. Parent browsing, resource links, media, and neighborhood navigation are future extensions. The panes should not be filled with controls that imply those features already work.
 
+## Required authoring buttons
+Created: 2026-10-11
+Modified: 2026-10-11
+
+Place **New journal entry**, **New event**, and **Transition to another arc** buttons near the chronology, above the lower panes. Each acts on the arc displayed in this particular window, including when its chronology is empty. These are required working GUI actions, not optional Command Center buttons.
+
+Use the right-hand detail pane as the draft editor with Save and Cancel while keeping the surrounding arc context visible. Ordinary entries and events populate the chronology without changing arc boundaries; a transition records an event, ends the current arc, and creates a successor. See [Arc authoring](arc-authoring.md) for the required flows, draft handling, multi-window updates, and atomic persistence of transitions.
+
 ## Multiple instances and updates
 Created: 2026-10-11
 Modified: 2026-10-11

@@ -26,6 +26,8 @@ Arcs will be [M1](m1.md) objects conceptually: each arc has a stable UUID, and i
 
 An arc can belong to multiple larger arcs. Containment therefore must support multiple parents rather than require a single-parent tree.
 
+Lion specifies that creating a transition also creates a new successor arc and a separate M1-conforming link object between the predecessor and successor. The link has its own stable UUID, with a Link Aspect whose `from` is the predecessor UUID and `to` is the successor UUID. This relationship object is distinct from the event that establishes the transition. See [the adopted authoring design](../design/arc-authoring.md).
+
 ## Character, events, and endings
 Created: 2026-10-11
 Modified: 2026-10-11

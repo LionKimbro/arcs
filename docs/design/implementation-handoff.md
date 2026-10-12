@@ -36,7 +36,7 @@ Modified: 2026-10-11
 
 The initial delivery must implement creation, durable retrieval, the actual arc header and two-pane detail layout, concurrent windows, and lifecycle behavior. The detail header should support the established identity, boundary, and narrative concepts. Editing mechanics and the extent of the initial temporal editor need a small design decision before rendering; do not silently present inert editable-looking controls as completed functionality.
 
-Journal/event authoring and transitions are known requirements of the larger program. Lion has not explicitly said all three authoring workflows must ship in this first delivery. The minimum acceptance path does not require them; a subsequent bounded slice can make the chronology populated through those workflows. If scope is expanded to include them initially, settle that explicitly. Empty chronology and no-selection states must be real usable states, not fabricated journal or event data. Chronology rendering can be verified with isolated fixtures without implying that authoring is delivered.
+The initial create/open implementation has now been completed according to Lion. He requests the next design extension explicitly: three required buttons in every Arc Detail View, **New journal entry**, **New event**, and **Transition to another arc**, with working authoring flows. [Arc authoring](arc-authoring.md) is now specific design authority for those actions; their earlier placement in design references no longer means they are optional or deferred. Empty chronology remains a valid state, and the buttons must work from it.
 
 Banded exploration, Arc Neighborhood, frames, media management, project integration, full M1 exchange, and live FileTalk integration are later work unless explicitly brought into scope. Preserve the architecture and identities needed for them without implementing speculative general frameworks.
 
@@ -45,7 +45,7 @@ Created: 2026-10-11
 Modified: 2026-10-11
 
 1. This handoff and [overview](overview.md).
-2. [Command Center](command-center.md), [Arc Detail View](arc-detail-view.md), and [first-arc flow](first-arc.md).
+2. [Command Center](command-center.md), [Arc Detail View](arc-detail-view.md), [Arc authoring](arc-authoring.md), and [first-arc flow](first-arc.md).
 3. [Architecture](architecture.md), [multiple windows](multiple-windows.md), and [lifecycle](lifecycle.md).
 4. [Data and persistence](data-and-persistence.md), including unresolved implementation gates.
 5. [Acceptance scenarios](acceptance-scenarios.md).
