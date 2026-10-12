@@ -75,6 +75,24 @@
       "path": "F:\\repo\\filetalk\\docs\\spec\\patchboard-file-transport.v1.json",
       "companion_path": "F:\\repo\\filetalk\\docs\\spec\\patchboard-file-transport.v1.md",
       "source": "F:\\repo\\filetalk\\README.md"
+    },
+    {
+      "id": "bounded-agentic-development.basic-method",
+      "title": "Bounded Agentic Development — basic method",
+      "purpose": "Small bounded implementation acts, explicit responsibilities, and flexible outline sketches. Arcs uses minimal broad-stroke pseudocode.",
+      "path": "F:\\repo\\bad-development-ruminition\\docs\\distillation\\basic-method.md"
+    },
+    {
+      "id": "today.repository",
+      "title": "Today reference application",
+      "purpose": "Reference implementation for Tk/Core/Mem/Disk machines, Mobile Stacks, startup, orderly shutdown, and fatal worker handling.",
+      "path": "F:\\repo\\today"
+    },
+    {
+      "id": "today.architecture-review.2026-10-06",
+      "title": "Today architecture review — October 6, 2026",
+      "purpose": "Architecture report; consult current src/today implementation for lifecycle behavior.",
+      "path": "F:\\repo\\today\\docs\\architecture-review.md"
     }
   ]
 }

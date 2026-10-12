@@ -14,6 +14,8 @@ An arc also represents Lion's story to himself about who he is and what he is do
 
 Its data must be conceptually mappable to [M1](m1.md) for cooperation with other systems, with stable UUID identity as the key. Internal structure and storage remain free choices, including SQLite or custom JSON. M1 interoperability does not prescribe the application's internal schema.
 
+Lion has selected SQLite, with the Disk machine owning persistence. [Data storage](data-storage.md) records the decisions and open design choices; each arc's UUID is established regardless of storage.
+
 ## Connection to the earlier design
 Created: 2026-10-11
 Modified: 2026-10-11
@@ -28,4 +30,4 @@ Lion subsequently clarified that an arc can belong to multiple larger arcs and t
 Created: 2026-10-11
 Modified: 2026-10-11
 
-The repository currently contains conceptual source material and an empty Python package scaffold. The October 7 work note references the Tk/Core/Mem/Disk worker architecture with Mobile Stack continuations used in Today. That note explicitly applies only to October 7; it is historical architecture context, not a standing instruction or evidence of an implemented Arcs architecture.
+The repository currently contains design and conceptual source material and an empty Python package scaffold. The October 7 work note references the Tk/Core/Mem/Disk worker architecture with Mobile Stack continuations used in Today and applies only to that date. Lion has now explicitly adopted that architecture in this conversation; the current decision is recorded in [docs/design](../design/overview.md). It is not yet implemented in Arcs.
