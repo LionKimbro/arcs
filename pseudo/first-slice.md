@@ -4,7 +4,8 @@ Tk presents one Command Center and on-demand detail windows. Core owns commands,
 view drafts, and outstanding operations. Mem owns accepted records. Disk owns SQLite.
 Use Today's thread-local Mobile Stacks and fatal-worker boundary.
 
-Commands: create-arc; edit-arc UUID; list-arcs; help. Creation starts untitled,
+Commands: create-arc; edit-arc name-or-UUID; list-arcs; help; exit (normal close).
+Creation starts untitled,
 with a generated name and unknown boundaries. UUIDs never change.
 
 Basic and Arc aspects have separate UUID-keyed tables. Load once at startup.

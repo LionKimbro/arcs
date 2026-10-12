@@ -19,7 +19,8 @@ def stamp():
 
 def create_arc(uuid):
     return {"uuid": uuid, "name": f"arc-{uuid[:8]}", "title": "Untitled arc",
-            "description": "", "revision": 1,
+            "description": "", "type": "arc", "date": "", "revision": 1,
+            "begin-event": None, "end-event": None,
             "temporal": {"format": "CHRONOMARK-MCCMc26", "version": "0.1",
                          "timezone": "America/Los_Angeles", "records": [
                              {"uuid": uuid, "type": "PERIOD", "registered-at": stamp(),

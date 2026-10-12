@@ -4,7 +4,7 @@ from collections import deque
 from copy import deepcopy
 from uuid import uuid4
 
-from . import machine, mobile_stacks, records
+from . import authoring, machine, mobile_stacks, records
 
 g = {"ready": False, "closing": False, "active": None, "send": None}
 reg = {"event": None, "command": None, "tail": None, "args": None}
@@ -68,11 +68,73 @@ def handle_when_core_receives_operation_result():
                    "result": deepcopy(mobile_stacks.get_register("result"))})
 
 
-def create_detail_view(record):
+def create_detail_view(record, chronology=None):
     view_id = str(uuid4())
     fields = records.get_editor_fields(record)
-    views[view_id] = {"record": deepcopy(record), "draft": deepcopy(fields), "pending": False}
+    views[view_id] = {"record": deepcopy(record), "draft": deepcopy(fields), "pending": False,
+                      "chronology": deepcopy(chronology or []), "selected": None,
+                      "author": None, "author-pending": False, "prior-selection": None}
     emit({"type": "OPEN", "view": view_id, "record": deepcopy(record), "fields": fields})
+    present_chronology(view_id)
+
+
+def present_chronology(view_id):
+    view = views[view_id]
+    emit({"type": "CHRONOLOGY", "view": view_id, "items": deepcopy(view["chronology"]),
+          "selected": view["selected"]})
+
+
+def present_record_details(view_id):
+    view = views[view_id]
+    record = next((record for record in view["chronology"] if record["uuid"] == view["selected"]), None)
+    emit({"type": "DETAIL", "view": view_id, "record": deepcopy(record)})
+
+
+def navigate_authoring_view(view_id, intent):
+    view = views[view_id]
+    if view["author-pending"]:
+        present_chronology(view_id)
+        return
+    prior = view["prior-selection"] if view["author"] else view["selected"]
+    view["author"] = None
+    kind = intent["kind"]
+    if kind == "start":
+        view["prior-selection"] = prior
+        view["selected"] = None
+        view["author"] = authoring.create_draft(intent["draft-kind"], view["record"])
+        view["author"]["base"] = intent.get("base", view["record"]["revision"])
+        emit({"type": "AUTHOR", "view": view_id, "draft": deepcopy(view["author"]),
+              "arc-title": view["record"]["title"]})
+    elif kind == "select":
+        if any(item["uuid"] == intent["uuid"] for item in view["chronology"]):
+            view["selected"] = intent["uuid"]
+        present_record_details(view_id)
+    elif kind == "cancel":
+        view["selected"] = prior
+        present_record_details(view_id)
+    elif kind == "close":
+        del views[view_id]
+        emit({"type": "CLOSE", "view": view_id})
+        return
+    present_chronology(view_id)
+
+
+def reduce_authored_change_for_each_view(event):
+    request, result = event["request"], event["result"]
+    for view_id, view in list(views.items()):
+        arc_id = view["record"]["uuid"]
+        if arc_id not in result["arcs"]:
+            continue
+        if result["arcs"][arc_id]["revision"] != view["record"]["revision"]:
+            reduce_view_change(view_id, result["arcs"][arc_id])
+        view["chronology"] = deepcopy(result["chronologies"][arc_id])
+        if view_id == request["view"] and view["author"] and view["author"]["uuid"] == request["draft"]["uuid"]:
+            view["author"] = None
+            view["selected"] = result["selected"]
+        present_chronology(view_id)
+        if view["author"] is None:
+            present_record_details(view_id)
+    say(f"Saved {request['draft']['kind']} {result['selected']}.")
 
 
 def reduce_view_change(view_id, record):
@@ -102,16 +164,21 @@ def reduce_returned_operation_for_all_views(event):
     view_id = request.get("view")
     view = views.get(view_id)
     if view:
-        view["pending"] = False
+        view["author-pending" if request["action"] in ("author", "author-refresh") else "pending"] = False
     status = result["status"]
     if status == "ready":
         g["ready"] = True
-        say(f"Ready. {result['count']} arc(s). Commands: create-arc | edit-arc <UUID> | list-arcs | help")
+        say(f"Ready. {result['count']} arc(s). Commands: create-arc | edit-arc <name-or-UUID> | list-arcs | help | exit")
         emit({"type": "READY"})
     elif status == "listed":
         say("\n".join(f"{r['name']}:{r['uuid']}" for r in result["arcs"]) or "No arcs.")
     elif status == "opened":
-        if request["action"] == "reload" and view:
+        if request["action"] == "author-refresh" and view and view["author"]:
+            reduce_view_change(view_id, result["record"])
+            view["author"]["base"] = result["record"]["revision"]
+            emit({"type": "AUTHOR_STATUS", "view": view_id,
+                  "status": "Predecessor refreshed. Your transition draft is retained."})
+        elif request["action"] == "reload" and view:
             view["record"] = deepcopy(result["record"])
             command = {"type": "UPDATE", "view": view_id, "record": deepcopy(view["record"]),
                        "saved-fields": records.get_editor_fields(view["record"]),
@@ -122,7 +189,9 @@ def reduce_returned_operation_for_all_views(event):
                 command.update(fields=deepcopy(view["draft"]), status="Reloaded saved data.")
             emit(command)
         elif not g["closing"]:
-            create_detail_view(result["record"])
+            create_detail_view(result["record"], result["chronology"])
+    elif status == "authored":
+        reduce_authored_change_for_each_view(event)
     elif status == "accepted":
         record = result["record"]
         # Mark only the submitted generation clean; preserve edits made during a save.
@@ -144,9 +213,16 @@ def reduce_returned_operation_for_all_views(event):
     else:
         say("Error: " + result["message"])
         if view:
-            emit({"type": "STATUS", "view": view_id, "status": result["message"]})
+            emit({"type": "AUTHOR_STATUS" if request["action"] in ("author", "author-refresh") else "STATUS",
+                  "view": view_id, "status": result["message"]})
+    if status in ("error", "conflict") and g["closing"]:
+        g["closing"] = False
+        emit({"type": "CLOSE_ABORTED", "text": "Close canceled because a save failed. Drafts are retained."})
     if view:
-        emit({"type": "BUSY", "view": view_id, "busy": False})
+        emit({"type": "AUTHOR_BUSY" if request["action"] in ("author", "author-refresh") else "BUSY",
+              "view": view_id, "busy": False})
+        if request.get("after") and status in ("accepted", "authored") and not g["closing"]:
+            emit({"type": "NAVIGATION_CONTINUE", "view": view_id, "intent": request["after"]})
 
 
 def interpret_current_command_from_entry():
@@ -156,8 +232,11 @@ def interpret_current_command_from_entry():
         return
     say("> " + reg["event"]["text"])
     if command == "HELP" and not args:
-        say("create-arc — create and open an arc\nedit-arc <UUID> — open an existing arc\n"
-            "list-arcs — print name:UUID\nhelp — this summary")
+        say("create-arc — create and open an arc\nedit-arc <name-or-UUID> — open an existing arc\n"
+            "list-arcs — print name:UUID\nhelp — this summary\nexit — close Arcs")
+        return
+    if command == "EXIT" and not args:
+        emit({"type": "REQUEST_CLOSE"})
         return
     if not g["ready"]:
         say("Arcs is still starting.")
@@ -168,12 +247,7 @@ def interpret_current_command_from_entry():
     elif command == "LIST-ARCS" and not args:
         enqueue_request({"action": "list"})
     elif command == "EDIT-ARC" and len(args) == 1:
-        try:
-            uuid = records.normalize_uuid(args[0])
-        except ValueError as error:
-            say("Error: " + str(error))
-            return
-        enqueue_request({"action": "open", "uuid": uuid})
+        enqueue_request({"action": "open", "selector": args[0]})
     else:
         say("Unknown command or wrong arguments. Type help.")
 
@@ -208,8 +282,29 @@ def reduce_current_semantic_event():
         view["pending"] = True
         enqueue_request({"action": "save", "view": view_id, "uuid": view["record"]["uuid"],
                          "base": event.get("base", view["record"]["revision"]),
-                         "fields": deepcopy(view["draft"])})
+                         "fields": deepcopy(view["draft"]), "after": event.get("after")})
         emit({"type": "BUSY", "view": view_id, "busy": True})
+    elif kind == "AUTHOR_NAVIGATE":
+        navigate_authoring_view(view_id, event["intent"])
+    elif kind == "AUTHOR_DRAFT" and view["author"] and not view["author-pending"]:
+        if event["uuid"] == view["author"]["uuid"]:
+            view["author"]["fields"] = deepcopy(event["fields"])
+    elif kind == "AUTHOR_SAVE" and view["author"] and not view["author-pending"]:
+        if event["uuid"] != view["author"]["uuid"]:
+            return
+        view["author"]["fields"] = deepcopy(event["fields"])
+        view["author-pending"] = True
+        enqueue_request({"action": "author", "view": view_id, "draft": deepcopy(view["author"]),
+                         "after": event.get("after")})
+        emit({"type": "AUTHOR_BUSY", "view": view_id, "busy": True})
+    elif kind == "AUTHOR_REFRESH" and view["author"] and not view["author-pending"]:
+        view["author-pending"] = True
+        enqueue_request({"action": "author-refresh", "view": view_id, "uuid": view["record"]["uuid"]})
+        emit({"type": "AUTHOR_BUSY", "view": view_id, "busy": True})
+    elif kind == "OPEN_SUCCESSOR":
+        selected = next((item for item in view["chronology"] if item["uuid"] == view["selected"]), None)
+        if selected and selected["successor"]:
+            enqueue_request({"action": "open", "uuid": selected["successor"]})
     elif kind == "RELOAD" and not view["pending"]:
         # Queued behind writes, so this obtains the latest accepted snapshot.
         view["pending"] = True

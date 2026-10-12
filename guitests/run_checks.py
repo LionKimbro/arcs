@@ -14,6 +14,10 @@ def run_checks():
         for mode in ("create", "reopen"):
             subprocess.run([sys.executable, str(root / "smoke.py"), mode, str(database)],
                            timeout=25, check=True)
+        author_database = Path(directory) / "authoring.sqlite3"
+        for mode in ("create", "reopen"):
+            subprocess.run([sys.executable, str(root / "authoring.py"), mode, str(author_database)],
+                           timeout=35, check=True)
         for failure in ("CORE", "MEM", "DISK", "WRITE"):
             failed_database = Path(directory) / f"{failure}.sqlite3"
             result = subprocess.run([sys.executable, str(root / "failure.py"), failure,

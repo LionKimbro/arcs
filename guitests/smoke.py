@@ -91,6 +91,7 @@ def advance_scenario():
     elif phase == 6 and "Save conflict" in output:
         assert tk.windows[g["second"]]["variables"]["title"].get() == "Independent draft"
         tk.messagebox.askyesno = lambda *args, **kwargs: True
+        tk.messagebox.askyesnocancel = lambda *args, **kwargs: False
         tk.handle_when_user_reloads_saved_arc(g["second"])
         g["phase"] = 7
     elif phase == 7 and tk.windows[g["second"]]["status"].get() == "Reloaded saved data.":
@@ -107,15 +108,21 @@ def advance_scenario():
                                  "expected-fields": expected, "status": "Saved."})
         assert tk.get_view_fields(g["second"])["title"] == "Typing after refresh was queued"
         assert tk.windows[g["second"]]["base-revision"] == 2
-        tk.handle_when_user_closes_command_center()
-        tk.handle_when_user_closes_command_center()
+        tk.messagebox.askyesnocancel = lambda *args, **kwargs: None
+        submit("exit")
+        g["phase"] = 8
+    elif phase == 8 and "> exit" in output:
+        assert not tk.g["closing"]
+        assert tk.get_view_fields(g["second"])["title"] == "Typing after refresh was queued"
+        tk.messagebox.askyesnocancel = lambda *args, **kwargs: False
+        submit("EXIT")
         g["phase"] = 99
     elif phase == 90 and len(tk.windows) == 3:
         assert all(uuid in output for uuid in g["ids"])
         saved = next(window for window in tk.windows.values() if window["base"]["name"] == "persisted-passage")
         assert saved["base"]["begin"] == "2020-04"
         assert saved["base"]["description"] == "A story that persists after restart."
-        tk.handle_when_user_closes_command_center()
+        submit("exit")
         g["phase"] = 99
 
 

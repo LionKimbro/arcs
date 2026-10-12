@@ -1,5 +1,8 @@
 # First implementation
 
+This records the original slice. Schema and authoring extensions are documented
+in [authoring.md](authoring.md); they preserve the worker/continuation architecture.
+
 `main` resolves configuration, installs queues/runtimes, builds Command Center,
 starts Disk/Mem/Core in that order, and joins Core/Mem before stopping Disk.
 `machine` and `mobile_stacks` adapt Today's current permanent-worker mechanisms:

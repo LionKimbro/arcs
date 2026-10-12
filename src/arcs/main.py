@@ -15,9 +15,11 @@ def initialize_workers_and_wire_queues():
             ("CORE", {"RESULT": core.handle_when_core_receives_operation_result}),
             ("MEM", {"LOADED": mem.handle_when_mem_receives_initial_records,
                      "REQUEST": mem.handle_when_mem_receives_arc_request,
-                     "COMMITTED": mem.handle_when_mem_receives_committed_arc}),
+                     "COMMITTED": mem.handle_when_mem_receives_committed_arc,
+                     "AUTHORED": mem.handle_when_mem_receives_authored_commit}),
             ("DISK", {"LOAD": disk.handle_when_disk_receives_initial_load,
-                      "WRITE": disk.handle_when_disk_receives_arc_write})):
+                      "WRITE": disk.handle_when_disk_receives_arc_write,
+                      "AUTHOR_WRITE": disk.handle_when_disk_receives_authoring_write})):
         machine.install_machine({"name": name, "inbox": Queue(), "handlers": handlers})
     tk.g["outgoing"] = machine.machines["CORE"]["inbox"]
     tk.g["incoming"] = Queue()
