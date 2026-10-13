@@ -4,7 +4,7 @@ from collections import deque
 from copy import deepcopy
 from uuid import uuid4
 
-from . import authoring, machine, mobile_stacks, records
+from . import authoring, machine, mobile_stacks, records, search_core
 
 g = {"ready": False, "closing": False, "active": None, "send": None}
 reg = {"event": None, "command": None, "tail": None, "args": None}
@@ -33,6 +33,7 @@ def initialize_core_for_a_new_session():
     views.clear()
     requests.clear()
     events.clear()
+    search_core.initialize_search_for_new_session()
     say("Starting Arcs…")
     requests.append({"action": "startup", "id": str(uuid4())})
 
@@ -161,6 +162,8 @@ def reduce_returned_operation_for_all_views(event):
     if g["active"] is None or request["id"] != g["active"]["id"]:
         raise RuntimeError("Unexpected operation completion")
     g["active"] = None
+    if search_core.reduce_search_operation_result(event):
+        return
     view_id = request.get("view")
     view = views.get(view_id)
     if view:
@@ -168,7 +171,8 @@ def reduce_returned_operation_for_all_views(event):
     status = result["status"]
     if status == "ready":
         g["ready"] = True
-        say(f"Ready. {result['count']} arc(s). Commands: create-arc | edit-arc <name-or-UUID> | list-arcs | help | exit")
+        search_core.g["types"] = result["types"]
+        say(f"Ready. {result['count']} arc(s). Commands: create-arc | edit-arc <name-or-UUID> | list-arcs | search | open <handle> | help | exit")
         emit({"type": "READY"})
     elif status == "listed":
         say("\n".join(f"{r['name']}:{r['uuid']}" for r in result["arcs"]) or "No arcs.")
@@ -215,6 +219,8 @@ def reduce_returned_operation_for_all_views(event):
         if view:
             emit({"type": "AUTHOR_STATUS" if request["action"] in ("author", "author-refresh") else "STATUS",
                   "view": view_id, "status": result["message"]})
+    if status in ("accepted", "authored"):
+        search_core.refresh_searches_after_domain_change(result)
     if status in ("error", "conflict") and g["closing"]:
         g["closing"] = False
         emit({"type": "CLOSE_ABORTED", "text": "Close canceled because a save failed. Drafts are retained."})
@@ -233,7 +239,9 @@ def interpret_current_command_from_entry():
     say("> " + reg["event"]["text"])
     if command == "HELP" and not args:
         say("create-arc — create and open an arc\nedit-arc <name-or-UUID> — open an existing arc\n"
-            "list-arcs — print name:UUID\nhelp — this summary\nexit — close Arcs")
+            "list-arcs — print name:UUID\nsearch — open a Basic Search window\n"
+            "open <name-or-UUID> — open an arc or inspect another Basic object\n"
+            "help — this summary\nexit — close Arcs")
         return
     if command == "EXIT" and not args:
         emit({"type": "REQUEST_CLOSE"})
@@ -246,8 +254,18 @@ def interpret_current_command_from_entry():
         say("Creating arc…")
     elif command == "LIST-ARCS" and not args:
         enqueue_request({"action": "list"})
-    elif command == "EDIT-ARC" and len(args) == 1:
-        enqueue_request({"action": "open", "selector": args[0]})
+    elif command in ("EDIT-ARC", "OPEN") and len(args) == 1:
+        try:
+            uuid = records.normalize_uuid(args[0])
+        except ValueError:
+            uuid = search_core.bindings.get(args[0])
+        request = {"action": "open" if command == "EDIT-ARC" else "inspect"}
+        request.update({"uuid": uuid} if uuid is not None else {"selector": args[0]})
+        if command == "OPEN":
+            request["source"] = "command"
+        enqueue_request(request)
+    elif command == "SEARCH" and not args:
+        search_core.create_search_view()
     else:
         say("Unknown command or wrong arguments. Type help.")
 
@@ -267,6 +285,8 @@ def reduce_current_semantic_event():
         return
     if kind == "COMMAND":
         interpret_current_command_from_entry()
+        return
+    if search_core.reduce_search_semantic_event(event):
         return
     view_id = event.get("view")
     view = views.get(view_id)

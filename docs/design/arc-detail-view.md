@@ -1,6 +1,6 @@
 # Arc Detail View
 Created: 2026-10-11
-Modified: 2026-10-11
+Modified: 2026-10-12
 
 ## Role and source
 Created: 2026-10-11
@@ -12,11 +12,13 @@ The window is summoned on demand by a user action in the one Command Center, eit
 
 ## Header
 Created: 2026-10-11
-Modified: 2026-10-11
+Modified: 2026-10-12
 
 Show the arc's human-readable title, editable machine-oriented name, beginning and ending or ongoing status, and paragraph-length narrative description. Identity is the stable UUID behind the view; it can also be inspected through development output. The name permits lowercase letters, digits, and hyphens, with no spaces or underscores. It is not an immutable ID or an assumed unique lookup key. Title permits ordinary human-readable text and punctuation.
 
 The description occupies a comfortable multiline text area. The header should ultimately permit editing title, name, description, and boundaries without requiring departure from the arc. The precise first-slice editing mechanism remains open: explicit edit/save controls or immediate working edits followed by deliberate save. Do not silently choose autosave behavior or copy Today's debounce timers merely because its code is available.
+
+Lion now requires [arc tags](arc-tags.md), stored conceptually in Basic's tags list. The view needs a way to see and edit the displayed arc's tags; exact placement and controls remain to be designed. Tags will also support finding arcs for the exploratory Arc Welder.
 
 Boundary information may include time and an associated event; it can also be unknown. An ongoing ending is a semantic state, not a date. Display preferences are distinct from temporal knowledge. The reference describes independently selectable beginning/ending formats, including date, year/month, event name, combined date/event, and ongoing. The full style chooser need not precede basic creation and viewing, but the first slice must not erase temporal precision or make an unknown time appear exact. The detailed editor and initial subset of styles remain to be settled.
 

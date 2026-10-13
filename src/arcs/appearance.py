@@ -44,6 +44,18 @@ def install_amber_theme_for_tk_windows(root):
     style.map("TEntry", fieldbackground=[("disabled", COLORS["top"])],
               foreground=[("disabled", COLORS["muted-text"])],
               bordercolor=[("focus", COLORS["accent"])])
+    style.configure("TCombobox", fieldbackground=COLORS["editor"], background=COLORS["control"],
+                    foreground=COLORS["primary-text"], arrowcolor=COLORS["secondary-text"], padding=(8, 6))
+    style.map("TCombobox", fieldbackground=[("readonly", COLORS["editor"])],
+              foreground=[("readonly", COLORS["primary-text"])], bordercolor=[("focus", COLORS["accent"])])
+    for option, value in {"background": COLORS["control"], "foreground": COLORS["primary-text"],
+                          "selectBackground": COLORS["selection"], "selectForeground": COLORS["primary-text"]}.items():
+        root.option_add("*TCombobox*Listbox." + option, value)
+    for name in ("TCheckbutton", "TRadiobutton"):
+        style.configure(name, background=COLORS["panel"], foreground=COLORS["primary-text"],
+                        indicatorbackground=COLORS["editor"], indicatorforeground=COLORS["accent"])
+        style.map(name, background=[("active", COLORS["panel"])],
+                  indicatorbackground=[("selected", COLORS["accent"]), ("active", COLORS["control"])])
     style.configure("TPanedwindow", background=COLORS["divider"], sashwidth=6, relief="flat")
     style.configure("Sash", background=COLORS["divider"], sashthickness=6)
     style.map("Sash", background=[("active", COLORS["border"])])

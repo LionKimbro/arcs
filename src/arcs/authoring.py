@@ -5,7 +5,7 @@ from datetime import datetime, timezone
 import re
 from uuid import uuid4
 
-from . import records
+from . import records, search
 
 LINK_TYPES = {name: f"tag:m1lattice.net,2026:/linktype/{name}"
               for name in ("transition", "via", "member-of", "parent-child")}
@@ -15,8 +15,8 @@ def create_draft(kind, arc):
     return {"uuid": str(uuid4()), "kind": kind, "arc": arc["uuid"], "base": arc["revision"],
             "successor": str(uuid4()) if kind == "transition" else None,
             "fields": {"title": "", "description": "", "when": "UNKNOWN", "earliest": "",
-                       "latest": "", "notes": "", "successor-title": "",
-                       "successor-name": "", "successor-description": ""}}
+                       "latest": "", "notes": "", "tags": "", "successor-title": "",
+                       "successor-name": "", "successor-description": "", "successor-tags": ""}}
 
 
 def parse_occurrence(value):
@@ -74,6 +74,7 @@ def create_record(draft):
     kind = "event" if draft["kind"] == "transition" else draft["kind"]
     return {"uuid": draft["uuid"], "type": kind, "name": f"{kind}-{draft['uuid'][:8]}",
             "title": fields["title"].strip(), "description": description,
+            "tags": search.parse_tags(fields.get("tags", "")),
             "date": (claim or {}).get("event", {}).get("focus", ""), "revision": 1,
             "temporal": {"format": "CHRONOMARK-MCCMc26", "version": "0.1",
                          "timezone": "America/Los_Angeles", "records": [
@@ -138,7 +139,7 @@ def prepare_bundle(draft, store):
         successor = records.prepare_arc_update(successor, {
             **records.get_editor_fields(successor), "title": fields["successor-title"],
             "name": fields["successor-name"].strip() or successor["name"],
-            "description": fields["successor-description"]})
+            "description": fields["successor-description"], "tags": fields.get("successor-tags", "")})
         successor["revision"] = 1
         previous = deepcopy(predecessor)
         previous["revision"] += 1

@@ -214,7 +214,7 @@ class ArcIntegrationTests(unittest.TestCase):
         self.command("edit-arc " + original["uuid"])
         self.assertEqual(self.wait_command("OPEN")["fields"], records.get_editor_fields(original))
         with closing(sqlite3.connect(self.database)) as connection:
-            self.assertEqual(connection.execute("PRAGMA user_version").fetchone()[0], 2)
+            self.assertEqual(connection.execute("PRAGMA user_version").fetchone()[0], 3)
             self.assertIn("type", {row[1] for row in connection.execute("PRAGMA table_info(basic)")})
             self.assertNotIn("typehint", {row[1] for row in connection.execute("PRAGMA table_info(links)")})
 

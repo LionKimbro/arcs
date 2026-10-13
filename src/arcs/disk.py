@@ -4,7 +4,7 @@ import json
 from pathlib import Path
 import sqlite3
 
-from . import authoring, machine, mobile_stacks, records
+from . import authoring, machine, mobile_stacks, records, search
 
 g = {"database": None, "connection": None}
 
@@ -49,17 +49,24 @@ def open_database_and_check_initial_schema():
             connection.execute("CREATE TABLE temporal (uuid TEXT PRIMARY KEY NOT NULL REFERENCES basic(uuid), "
                                "temporal_json TEXT NOT NULL)")
             connection.execute("PRAGMA user_version=2")
-    elif version != 2:
+        version = 2
+    if version == 2:
+        with connection:
+            connection.execute("BEGIN IMMEDIATE")
+            connection.execute("ALTER TABLE basic ADD COLUMN tags_json TEXT NOT NULL DEFAULT '[]'")
+            connection.execute("PRAGMA user_version=3")
+        version = 3
+    if version != 3:
         raise ValueError(f"Unsupported database version: {version}")
 
 
 def handle_when_disk_receives_initial_load():
     connection = g["connection"]
     result = {"objects": {}, "links": {}}
-    for uuid, name, title, description, kind, associated_date in connection.execute(
-            "SELECT uuid,name,title,description,type,date FROM basic"):
+    for uuid, name, title, description, kind, associated_date, tags_json in connection.execute(
+            "SELECT uuid,name,title,description,type,date,tags_json FROM basic"):
         record = dict(uuid=uuid, name=name, title=title, description=description,
-                      type=kind, date=associated_date, revision=1)
+                      type=kind, date=associated_date, revision=1, tags=search.normalize_tags(json.loads(tags_json)))
         if records.normalize_uuid(uuid) != uuid:
             raise ValueError("Stored UUID is not normalized")
         if kind == "arc":
@@ -93,14 +100,16 @@ def write_object(record, base):
         existing_link = connection.execute("SELECT uuid FROM links WHERE uuid=?", (record["uuid"],)).fetchone()
         if current or (existing_link and record["type"] != "link"):
             raise ValueError("New object identity is already in use")
-        connection.execute("INSERT INTO basic (uuid,name,title,description,type,date) VALUES (?,?,?,?,?,?)", (
-            record["uuid"], record["name"], record["title"], record["description"], record["type"], record.get("date", "")))
+        connection.execute("INSERT INTO basic (uuid,name,title,description,type,date,tags_json) VALUES (?,?,?,?,?,?,?)", (
+            record["uuid"], record["name"], record["title"], record["description"], record["type"], record.get("date", ""),
+            json.dumps(record.get("tags", []), ensure_ascii=False)))
     else:
         stored = connection.execute("SELECT revision FROM arc WHERE uuid=?", (record["uuid"],)).fetchone()
         if current is None or current[0] != "arc" or not stored or stored[0] != base:
             raise ValueError("Database revision changed outside this view; reload before saving.")
-        connection.execute("UPDATE basic SET name=?,title=?,description=?,date=? WHERE uuid=?", (
-            record["name"], record["title"], record["description"], record.get("date", ""), record["uuid"]))
+        connection.execute("UPDATE basic SET name=?,title=?,description=?,date=?,tags_json=? WHERE uuid=?", (
+            record["name"], record["title"], record["description"], record.get("date", ""),
+            json.dumps(record.get("tags", []), ensure_ascii=False), record["uuid"]))
     if record["type"] == "arc":
         values = (record["revision"], json.dumps(record["temporal"]), record.get("begin-event"),
                   record.get("end-event"), record["uuid"])

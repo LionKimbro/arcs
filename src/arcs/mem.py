@@ -2,7 +2,7 @@
 
 from copy import deepcopy
 
-from . import authoring, machine, mobile_stacks, records
+from . import authoring, machine, mobile_stacks, records, search
 
 arcs = {}
 objects = {}
@@ -24,6 +24,15 @@ def resolve_arc_uuid_for_command_selector(selector):
     raise ValueError("Unknown arc name or UUID. Use list-arcs to see available arcs.")
 
 
+def resolve_basic_name_from_canonical_objects(name):
+    matches = [record["uuid"] for record in objects.values() if record["name"] == name]
+    if len(matches) == 1:
+        return matches[0]
+    if matches:
+        raise ValueError("More than one object has that Basic name. Use its full UUID.")
+    raise ValueError("Unknown Basic name. Search for the object or use its full UUID.")
+
+
 def handle_when_mem_receives_initial_records():
     arcs.clear()
     objects.clear()
@@ -32,12 +41,44 @@ def handle_when_mem_receives_initial_records():
     objects.update(deepcopy(loaded["objects"]))
     links.update(deepcopy(loaded["links"]))
     arcs.update({uuid: record for uuid, record in objects.items() if record["type"] == "arc"})
-    mobile_stacks.set_register("result", {"status": "ready", "count": len(arcs)})
+    mobile_stacks.set_register("result", {"status": "ready", "count": len(arcs), "types": search.get_object_kinds(objects)})
 
 
 def handle_when_mem_receives_arc_request():
     request = mobile_stacks.get_register("request")
     action = request["action"]
+    if action == "search":
+        try:
+            result = {"status": "searched", "rows": search.find_results(request["criteria"], objects),
+                      "types": search.get_object_kinds(objects)}
+        except ValueError as error:
+            result = {"status": "error", "message": str(error)}
+        mobile_stacks.set_register("result", result)
+        return
+    if action in ("inspect", "inspect-refresh"):
+        if "selector" in request:
+            try:
+                request["uuid"] = resolve_basic_name_from_canonical_objects(request["selector"])
+            except ValueError as error:
+                mobile_stacks.set_register("result", {"status": "error", "message": str(error)})
+                return
+        record = objects.get(request["uuid"])
+        if record is None:
+            mobile_stacks.set_register("result", {"status": "error", "message": "Object reference no longer resolves."})
+            return
+        record = deepcopy(record)
+        record["associations"] = [{"uuid": link["to"], "title": arcs[link["to"]]["title"]}
+                                  for link in links.values() if link["type"] == "member-of"
+                                  and link["from"] == record["uuid"]]
+        if record["type"] in ("event", "journal-entry"):
+            occurrence = (records.get_effective_claim(record) or {}).get("event", {})
+            record["time-label"] = records.get_boundary_text(occurrence) if occurrence else "Time unknown"
+        if record["uuid"] in links:
+            record["link"] = deepcopy(links[record["uuid"]])
+        mobile_stacks.set_register("result", {"status": "inspected", "record": record,
+                                              "chronology": authoring.get_chronology(record["uuid"], {"objects": objects, "links": links})
+                                              if record["type"] == "arc" else []})
+        return
     if action == "author":
         try:
             bundle = authoring.prepare_bundle(request["draft"], {"objects": objects, "links": links})

@@ -1,6 +1,6 @@
 # Specific design
 Created: 2026-10-11
-Modified: 2026-10-11
+Modified: 2026-10-13
 
 ## Working locations and method
 Created: 2026-10-11
@@ -16,7 +16,7 @@ No BAD reference was found in the supplied Librarian2 registry on October 11. Th
 
 ## Established direction
 Created: 2026-10-11
-Modified: 2026-10-11
+Modified: 2026-10-13
 
 Use Today's Tk/Core/Mem/Disk architecture and Mobile Stack continuations. Disk owns SQLite persistence; Mem owns canonical in-memory domain data; Core owns application behavior and working presentation state; Tk owns presentation and event hooks on the main thread. The initial development interface is a [Command Center](command-center.md).
 
@@ -27,5 +27,11 @@ The first implementation includes both Command Center and the [Arc Detail View](
 Lion reports that initial implementation is complete. The next required extension is [Arc authoring](arc-authoring.md): three buttons in each detail view for creating journal entries, creating events, and recording an event that ends the current arc and begins a new one. Their behavior is adopted specific design, not merely a candidate in design references. This documentation update does not claim that those actions are implemented yet.
 
 Relationship persistence uses the adopted [links table](links-table.md), modeled closely on M1's Link Aspect with stable link UUIDs and general-object endpoints. Its SQL shape and migration obligations are specified; implementation remains separate.
+
+Lion also requires [arc tags](arc-tags.md), conceptually mapping to Basic's tags list and usable for search. The [Arc Welder](../concepts/arc-welder.md) remains an exploratory neighborhood/linking interface: start from an arc and pull in candidates found by temporal overlap, temporal neighboring, or tags.
+
+Lion has ratified [Basic Search](basic-search.md). It supports multiple independent search windows, generic Basic filters, selectable result collections, object opening, session naming, and clipboard reference/query transfer. Read [clipboard contracts](search-clipboard.md), [session names](session-names.md), and [search acceptance](basic-search-acceptance.md) with it. The [approved visual reference](../design-references/basic-search-window.md) preserves the mockup, while working-design documents govern behavior.
+
+Develop generic search first, then arc-specific temporal queries, then the Welding Station. Basic Search has no direct Pull into Arc Welder action. It copies a JSON list of UUID strings; the future Welder offers its own pull-in action when those references resolve to arcs. Recognition alone does not import or create relationships. The complete Welder layout remains unratified, and temporal query semantics need a bounded follow-up before coding that part.
 
 See [architecture](architecture.md) for ownership and transport. Lion has accepted the [multiple-window architecture](multiple-windows.md): one Tk main thread and one shared Core with per-view state. Returned memory-change information is offered to each window's reducer, which handles relevant changes and ignores others; polling is not required. Earlier [alternatives](../design-references/window-synchronization.md) are retained as discussion history. The earlier handoff records questions that were open before implementation; consult the current code and implementation records for decisions settled there before extending it. No application code or BAD pseudocode is changed by this authoring design update.

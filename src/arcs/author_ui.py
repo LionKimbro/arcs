@@ -211,7 +211,7 @@ def build_author_editor(command):
         ttk.Label(frame, text="Transition event", font=("Segoe UI", 11, "bold")).grid(
             row=reg["row"], column=0, sticky="w", pady=(8, 0))
         reg["row"] += 1
-    for spec in (("title", "Title (optional)", False),
+    for spec in (("title", "Title (optional)", False), ("tags", "Tags (comma-separated)", False),
                  ("description", "Entry content" if draft["kind"] == "journal-entry" else "What happened", True),
                  ("when", "Date/time (UNKNOWN, YYYY, YYYY-MM, date, or ISO time with offset)", False),
                  ("earliest", "Earliest plausible time (optional)", False),
@@ -224,6 +224,7 @@ def build_author_editor(command):
         reg["row"] += 1
         for spec in (("successor-title", "New successor arc title (required)", False),
                      ("successor-name", "Successor name (optional; generated if blank)", False),
+                     ("successor-tags", "Successor tags (comma-separated)", False),
                      ("successor-description", "Successor narrative", True)):
             build_author_field(spec)
     actions = ttk.Frame(window["detail-actions"])

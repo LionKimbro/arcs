@@ -1,5 +1,8 @@
 # Authoring extension
 
+The authoring schema described below was introduced as version 2. The current
+[search extension](search.md) adds version 3 Basic tags and tag authoring controls.
+
 Schema version 2 migrates v1 in a Disk-owned transaction: Basic gains `type` and
 `date`; Arc gains `begin_event` and `end_event`; `links` uses the adopted DDL and
 endpoint indexes; `temporal` stores ChronoMark-compatible entry/event content.

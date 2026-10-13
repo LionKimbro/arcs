@@ -30,6 +30,8 @@ without reinstalling. Run it from any directory. `python -m arcs` is also suppor
 - `create-arc`: commits a new arc, prints its UUID, and opens its detail window.
 - `edit-arc <name-or-UUID>`: opens another view of that existing arc. Names match exactly; if several arcs share a name, use its UUID from `list-arcs`.
 - `list-arcs`: prints `name:UUID` for each known arc.
+- `search`: opens an independent Basic Search window.
+- `open <name-or-UUID>`: opens an arc or inspects another Basic object.
 - `help`: displays the command summary.
 - `exit`: closes Arcs, with the usual unsaved-draft prompts and completion of submitted saves.
 
@@ -41,7 +43,7 @@ an ongoing ending or a beginning today.
 Double-click a UUID label to copy it to the clipboard. UUIDs in Command Center
 output and saved journal/event prose can also be copied by double-clicking them.
 
-Edit title, lowercase/digit/hyphen name, description, and boundaries, then click
+Edit title, lowercase/digit/hyphen name, tags, description, and boundaries, then click
 **Save**. Boundaries accept `YYYY`, `YYYY-MM`, `YYYY-MM-DD`, or `UNKNOWN`; the end
 also accepts `ONGOING`. Changed boundaries add a ChronoMark claim and select it
 as the working claim; previous claims remain. Richer saved boundaries appear as
@@ -85,16 +87,57 @@ close, closing is canceled. Cancel creates no record. Ordinary events and journa
 do not modify arc boundaries. Submitted authoring controls are disabled until the
 operation returns, preventing duplicate Save clicks.
 
-SQLite schema version 2 extends `basic` with one object-kind `type` and `date`,
+## Basic Search and session names
+
+Enter `search` in Command Center. Each search window starts without running a
+query and has independent parameters, results, and checkbox selections. Filter
+by Basic type, name/title substrings, and comma-separated tags. Substrings and
+whole-tag matches ignore case; populated filters combine with AND. Choose All
+tags or Any tag. Empty filters find all Basic objects, including links with Basic
+metadata; links without Basic metadata are not results.
+
+**Search** executes the parameters. Editing or **Clear parameters** keeps old
+results labeled with their executed query. A new search clears selection; saves
+refresh executed queries while preserving surviving selections and edited input.
+Use individual checkboxes, Space on a focused row, or Select all. Open selected
+requires one object and opens its real detail/inspection window. Full UUIDs in
+the results can be copied by double-clicking their column.
+
+**Name selected object(s)…** assigns one session name per object. Names have no
+whitespace, preserve case, and cannot look like full UUIDs. Duplicate names in a
+batch are rejected. Rebinding requires reviewing both objects and explicitly
+replacing the bindings; cancel applies nothing. Session names are shared across
+windows and disappear at application exit. They shadow Basic names in `open` and
+`edit-arc`, while explicit UUIDs always identify the object directly. Assignment
+does not rename Basic records. Search substring fields remain literal text.
+
+**Copy reference(s)** writes a JSON array of full UUID strings to the system
+clipboard, even for one object. **Copy search** writes the currently edited
+criteria in the versioned `arcs-basic-search` format. On focus, another search
+window offers **Reset to clipboard search** and **Incorporate…**. Adoption never
+runs a query. Reset replaces criteria; incorporation retains compatible filters
+and asks Keep current/Use incoming for conflicts. Cancel leaves input unchanged.
+Clipboard access/validation errors preserve parameters and results.
+
+Tags are stored in Basic as a JSON list. Enter comma-separated labels in Arc
+Detail or authoring forms; spaces within a label are allowed. Labels are trimmed,
+empty separators ignored, and case-insensitive duplicates keep their first
+spelling. Commas and line breaks cannot be part of a label. Saving or removing an
+arc's tags changes only that object's tags. Tags are classification, not links.
+
+SQLite schema version 3 adds `tags_json` to the version 2 Basic representation.
+Version 2 extended `basic` with one object-kind `type` and `date`,
 uses `links` for UUID-keyed directed relationships, and `temporal` for richer entry/
 event claims. Prose lives only in Basic. Arc aspect data remains in `arc`. There
 are no separate event/journal body tables or parallel typehint fields. Link endpoints
-resolve to Basic objects or other links; links need no Basic row. Existing v1
-databases migrate automatically without changing arc identities or metadata.
+resolve to Basic objects or other links; links need no Basic row. Existing v1/v2
+databases migrate automatically, initially assigning empty tags while preserving
+identities, metadata, temporal claims, and links.
 Use one running Arcs session per database; there is no multi-process edit protocol.
 
-Full temporal editing, existing-successor transitions, M1 exchange, and FileTalk
-integration remain subsequent work.
+Temporal search/range transfer and the Arc Welder await their separate design
+decisions. Full temporal editing, existing-successor transitions, M1 exchange,
+and FileTalk integration remain subsequent work.
 
 ## Verification
 
@@ -105,10 +148,13 @@ integration remain subsequent work.
 This checks coding conventions, worker integration, and fresh-process real Tk
 creation/reopening, authoring, draft navigation/conflicts, atomic transition rollback,
 migration, endpoint validation, shutdown, and fatal-worker/write failures.
+Search checks include stale/closed returns, domain refresh, tags, session naming,
+clipboard contracts, real system clipboard transfer, and native search dialogs.
 All databases used by these checks are temporary; no personal database is touched.
 GUI checks briefly open native windows.
 
 Design: [docs/design/overview.md](docs/design/overview.md). Implementation notes:
 [docs/code/first-slice.md](docs/code/first-slice.md) and
-[docs/code/authoring.md](docs/code/authoring.md). BAD sketches:
-[pseudo/first-slice.md](pseudo/first-slice.md) and [pseudo/authoring.md](pseudo/authoring.md).
+[docs/code/authoring.md](docs/code/authoring.md) and [docs/code/search.md](docs/code/search.md).
+BAD sketches: [pseudo/first-slice.md](pseudo/first-slice.md),
+[pseudo/authoring.md](pseudo/authoring.md), and [pseudo/search.md](pseudo/search.md).

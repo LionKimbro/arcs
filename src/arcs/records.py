@@ -18,7 +18,7 @@ def stamp():
 
 
 def create_arc(uuid):
-    return {"uuid": uuid, "name": f"arc-{uuid[:8]}", "title": "Untitled arc",
+    return {"uuid": uuid, "name": f"arc-{uuid[:8]}", "title": "Untitled arc", "tags": [],
             "description": "", "type": "arc", "date": "", "revision": 1,
             "begin-event": None, "end-event": None,
             "temporal": {"format": "CHRONOMARK-MCCMc26", "version": "0.1",
@@ -53,7 +53,7 @@ def get_editor_fields(record):
     return {"title": record["title"], "name": record["name"],
             "description": record["description"],
             "begin": get_boundary_text(claim.get("begin")),
-            "end": get_boundary_text(claim.get("end"))}
+            "end": get_boundary_text(claim.get("end")), "tags": ", ".join(record.get("tags", []))}
 
 
 def parse_boundary(text, side):
@@ -73,6 +73,7 @@ def parse_boundary(text, side):
 
 
 def prepare_arc_update(record, fields):
+    from .search import parse_tags
     title = fields["title"].strip()
     name = fields["name"].strip()
     if not title:
@@ -81,6 +82,7 @@ def prepare_arc_update(record, fields):
         raise ValueError("Name permits lowercase letters, digits, and hyphens.")
     proposal = deepcopy(record)
     proposal.update(title=title, name=name, description=fields["description"],
+                    tags=parse_tags(fields.get("tags", ", ".join(record.get("tags", [])))),
                     revision=record["revision"] + 1)
     period = proposal["temporal"]["records"][0]
     period["what-happened"] = title

@@ -1,12 +1,14 @@
 # First implementation handoff
 Created: 2026-10-11
-Modified: 2026-10-11
+Modified: 2026-10-13
 
 ## Purpose and authority
 Created: 2026-10-11
 Modified: 2026-10-11
 
 This document orients a separate implementation conversation that does not have the design conversation's history. Lion will provide programming conventions separately. This handoff supplies product intent, accepted architecture, initial scope, reference code, and questions still needing decisions. It does not authorize implementation merely by being read.
+
+The initial application and authoring work have progressed since this first-slice handoff. For the newly ratified search extension, begin with [Basic Search](basic-search.md), [search clipboard](search-clipboard.md), [session names](session-names.md), and [search acceptance](basic-search-acceptance.md). Preserve the current implementation's settled mechanisms; this older handoff's unresolved details are not permission to redesign them. Generic search is the next bounded slice, followed by arc-specific temporal search and then the Welder.
 
 `docs/design/` describes the adopted application direction. Specific unresolved details are labeled as such. `docs/design-references/` contains supporting artifacts and proposals, not blanket requirements. `docs/concepts/` contains vocabulary, background, and exploratory ideas. Implementation sketches belong in root-level `pseudo/`, code in root-level `src/`. Keep pseudocode exceptionally small: broad strokes, lightly expressed, not an exhaustive reification of the system.
 

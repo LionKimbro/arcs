@@ -5,7 +5,7 @@ import tkinter as tkinter
 from tkinter import messagebox, ttk
 import traceback
 
-from . import appearance, author_ui, machine
+from . import appearance, author_ui, machine, search_ui
 
 g = {"root": None, "incoming": None, "outgoing": None, "closing": False}
 widgets = {}
@@ -51,6 +51,8 @@ def build_command_center_before_workers_start():
     g["closing"] = False
     widgets.clear()
     windows.clear()
+    search_ui.windows.clear()
+    search_ui.inspections.clear()
     root = tkinter.Tk()
     root.report_callback_exception = lambda *exception: handle_when_tk_callback_fails(exception)
     g["root"] = root
@@ -163,25 +165,25 @@ def handle_when_user_closes_command_center():
 def build_arc_detail_window(command):
     view_id = command["view"]
     window = tkinter.Toplevel(g["root"])
-    window.geometry("1060x820")
-    window.minsize(780, 620)
+    window.geometry("1060x860")
+    window.minsize(780, 720)
     window.protocol("WM_DELETE_WINDOW", lambda: handle_when_user_closes_detail_window(view_id))
     border = tkinter.Frame(window, background=appearance.COLORS["border"])
     border.pack(fill="both", expand=True, padx=12, pady=12)
     frame = ttk.Frame(border, padding=16)
     frame.pack(fill="both", expand=True, padx=1, pady=1)
     ttk.Label(frame, text="Arc Detail", style="Heading.TLabel").pack(anchor="w", pady=(0, 8))
-    variables = {key: tkinter.StringVar(window) for key in ("title", "name", "begin", "end")}
+    variables = {key: tkinter.StringVar(window) for key in ("title", "name", "begin", "end", "tags")}
     header = ttk.Frame(frame)
     header.pack(fill="x")
     header.columnconfigure(1, weight=1)
     header.columnconfigure(3, weight=1)
-    for position, key in enumerate(("title", "name", "begin", "end")):
+    for position, key in enumerate(("title", "name", "begin", "end", "tags")):
         row, column = position // 2, (position % 2) * 2
-        ttk.Label(header, text=key.capitalize(), style="Muted.TLabel").grid(
+        ttk.Label(header, text="Tags (commas)" if key == "tags" else key.capitalize(), style="Muted.TLabel").grid(
             row=row, column=column, sticky="w", padx=(0 if column == 0 else 16, 12), pady=3)
         entry = ttk.Entry(header, textvariable=variables[key], font=("TkDefaultFont", 11))
-        entry.grid(row=row, column=column + 1, sticky="ew", pady=3)
+        entry.grid(row=row, column=column + 1, columnspan=3 if key == "tags" else 1, sticky="ew", pady=3)
     ttk.Label(frame, text="Boundaries: YYYY / YYYY-MM / YYYY-MM-DD / UNKNOWN; end also accepts ONGOING.",
               style="Muted.TLabel").pack(anchor="w", pady=6)
     build_uuid_label(frame, command["record"]["uuid"]).pack(anchor="w")
@@ -294,6 +296,9 @@ def install_view_presentation(command):
 
 def realize_core_command(command):
     kind = command["type"]
+    if kind.startswith(("SEARCH_", "INSPECT_", "SESSION_")):
+        search_ui.realize_search_command(command)
+        return
     if kind == "OUTPUT":
         output = widgets["output"]
         output.configure(state="normal")
